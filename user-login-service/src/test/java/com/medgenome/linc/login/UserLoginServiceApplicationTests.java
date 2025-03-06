@@ -1,4 +1,4 @@
-package com.medgenome;
+package com.medgenome.linc.login;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

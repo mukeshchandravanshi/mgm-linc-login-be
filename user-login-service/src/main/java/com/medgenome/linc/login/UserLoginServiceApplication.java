@@ -1,4 +1,4 @@
-package com.medgenome;
+package com.medgenome.linc.login;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
