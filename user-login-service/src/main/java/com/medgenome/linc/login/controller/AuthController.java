@@ -25,41 +25,53 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Map<String, String> register(@RequestBody Map<String, String> request) {
+    public Map<String, String> register(@RequestBody User request) {
         System.out.println("payload"+request);
-        String username = request.get("username");
-        String password = request.get("password");
+        String userName = request.getEmail();
+        String password = request.getPassword();
 
-        if (username == null || password == null) {
+        if (userName == null || password == null) {
             throw new RuntimeException("Username and password are required.");
         }
 
-        if (userService.findByUsername(username).isPresent()) {
-            throw new RuntimeException(username+ " username already exists.");
+        if (userService.findByUserName(userName).isPresent()) {
+            throw new RuntimeException(userName+ " username already exists.");
         }
 
-        User user = new User(username, passwordEncoder.encode(password), Role.USER);
+        User user = User.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(userName) // Assuming username is email
+                .phoneNum(request.getPhoneNum())
+                .orgName(request.getOrgName())
+                .accountName(request.getAccountName())
+                .role(Role.USER)
+                .country(request.getCountry())
+                .password(passwordEncoder.encode(password))
+                .build();
+
         System.out.println("encodedUser:  "+user);
         userService.registerUser(user);
 
-        String token = jwtUtil.generateToken(username);
+        String token = jwtUtil.generateToken(userName);
         System.out.println("jwtToken: " + token);
         return Map.of("token", token,  "message", "You are successfully registered to MedGenome....");
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
+    public Map<String, String> login(@RequestBody User request) {
+        System.out.println("login payload"+request);
+        String userName = request.getEmail();
+        String password = request.getPassword();
 
-        User user = userService.findByUsername(username)
+        User user = userService.findByUserName(userName)
                 .orElseThrow(() -> new RuntimeException("Invalid username."));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid password.");
         }
 
-        String token = jwtUtil.generateToken(username);
+        String token = jwtUtil.generateToken(userName);
         return Map.of("token", token,  "message", "Welcome to MedGenome.....");
     }
 }

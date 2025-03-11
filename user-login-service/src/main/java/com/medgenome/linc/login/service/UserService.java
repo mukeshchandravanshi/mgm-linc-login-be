@@ -20,13 +20,13 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+    public UserDetails loadUserByUsername(String userName) {
+        return userRepository.findByEmail(userName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<User> findByUserName(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public User registerUser(User user) {

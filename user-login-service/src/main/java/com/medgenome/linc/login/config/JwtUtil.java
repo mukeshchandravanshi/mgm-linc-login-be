@@ -13,11 +13,11 @@ public class JwtUtil {
     // Use the secretKeyFor method to create a secure key for HS256
     private  final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 256-bit key
 
-    private final long EXPIRATION_TIME = 86400000; // 24 hours in milliseconds
+    private final long EXPIRATION_TIME = 120000; // 1 hour in milliseconds
 
-    public  String generateToken(String username) {
+    public  String generateToken(String userName) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userName)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(secretKey)
                 .compact();
@@ -32,17 +32,19 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    public boolean validateToken(String token, String username) {
-        return username.equals(extractUsername(token)) && !isTokenExpired(token);
+    public boolean validateToken(String token, String userName) {
+        return userName.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
-        return Jwts.parserBuilder()
+        Date expiration = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getExpiration()
-                .before(new Date());
+                .getExpiration();
+        System.out.println("Token expiration time: " + expiration);
+        return expiration.before(new Date());
     }
+
 }
