@@ -13,7 +13,7 @@ public class JwtUtil {
     // Use the secretKeyFor method to create a secure key for HS256
     private  final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 256-bit key
 
-    private final long EXPIRATION_TIME = 120000; // 1 hour in milliseconds
+    private final long EXPIRATION_TIME = 600000; // 1 hour in milliseconds
 
     public  String generateToken(String userName) {
         return Jwts.builder()

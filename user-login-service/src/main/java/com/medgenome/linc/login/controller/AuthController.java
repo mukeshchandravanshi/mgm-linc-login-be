@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -44,7 +45,6 @@ public class AuthController {
                 .email(userName) // Assuming username is email
                 .phoneNum(request.getPhoneNum())
                 .orgName(request.getOrgName())
-                .accountName(request.getAccountName())
                 .role(Role.USER)
                 .country(request.getCountry())
                 .password(passwordEncoder.encode(password))
@@ -60,18 +60,27 @@ public class AuthController {
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User request) {
-        System.out.println("login payload"+request);
-        String userName = request.getEmail();
+        String userName = request.getEmail() != null ? request.getEmail() : request.getPhoneNum();
         String password = request.getPassword();
 
-        User user = userService.findByUserName(userName)
-                .orElseThrow(() -> new RuntimeException("Invalid username."));
+        Optional<User> userOpt = userService.findByUserName(userName);
+
+        if (userOpt.isEmpty()) {
+            if (request.getEmail() != null) {
+                throw new RuntimeException("Invalid email.");
+            } else {
+                throw new RuntimeException("Invalid phone number.");
+            }
+        }
+
+        User user = userOpt.get();
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid password.");
         }
 
         String token = jwtUtil.generateToken(userName);
-        return Map.of("token", token,  "message", "Welcome to MedGenome.....");
+        return Map.of("token", token, "message", "Welcome to MedGenome!");
     }
+
 }

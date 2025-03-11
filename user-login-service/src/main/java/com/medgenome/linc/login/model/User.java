@@ -32,14 +32,15 @@ public class User implements UserDetails {
     @NotBlank(message = "Email is required")
     private String email;
 
+    @Pattern(
+            regexp = "^\\+?[0-9\\-\\s]{7,15}$",
+            message = "Invalid phone number format"
+    )
     @NotBlank(message = "Phone number is required")
     private String phoneNum;
 
     @NotBlank(message = "Organization name is required")
     private String orgName;
-
-    @NotBlank(message = "Account name is required")
-    private String accountName;
 
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -58,7 +59,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // Using email as the username
+        return email != null ? email : phoneNum; // Fallback to phone number if email is null
     }
 
     @Override
