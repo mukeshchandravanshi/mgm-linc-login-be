@@ -7,6 +7,7 @@ import com.medgenome.linc.login.model.Role;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.service.EmailService;
 import com.medgenome.linc.login.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,9 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+
+    @Value("${app.reset-password-url}")
+    private String resetPasswordUrl;
 
     public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userService = userService;
@@ -102,7 +106,7 @@ public class AuthController {
 
             User user = userOpt.get();
             String token = jwtUtil.generateResetToken(user.getUsername());
-            String resetUrl = "http://localhost:9000/auth/reset-password?token=" + token;
+            String resetUrl = resetPasswordUrl + token;
             String message = "Click the link to reset your password: ";
             String subjectMessage = "Password Reset Request";
             if (emailOrPhone.contains("@")) {
