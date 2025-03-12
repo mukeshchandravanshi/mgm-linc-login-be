@@ -40,6 +40,7 @@ public class UserService implements UserDetailsService {
         System.out.println("save user:   "+user.getUsername()+", "+user.getPassword()+","+user.getRole());
         return userRepository.save(user);//  JPA's save method will register new user
     }
+
     public void updateUser(User user) {
         userRepository.save(user); // JPA's save method will update if the user already exists
     }
