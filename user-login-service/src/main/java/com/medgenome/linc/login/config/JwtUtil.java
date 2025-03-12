@@ -47,4 +47,13 @@ public class JwtUtil {
         return expiration.before(new Date());
     }
 
+    public String generateResetToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setExpiration(new Date(System.currentTimeMillis() + 900000)) // 15 minutes
+                .signWith(secretKey)
+                .compact();
+    }
+
+
 }
