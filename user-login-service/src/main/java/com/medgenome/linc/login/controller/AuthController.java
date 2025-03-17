@@ -38,7 +38,7 @@ public class AuthController {
     @PostMapping("/register")
     public Map<String, String> register(@RequestBody User request) {
         System.out.println("payload"+request);
-        String userName = request.getEmail();
+        String userName = request.getEmail() != null ? request.getEmail() : request.getPhoneNum();
         String password = request.getPassword();
 
         if (userName == null || password == null) {
@@ -54,7 +54,6 @@ public class AuthController {
                 .lastName(request.getLastName())
                 .email(userName) // Assuming username is email
                 .phoneNum(request.getPhoneNum())
-                .orgName(request.getOrgName())
                 .role(Role.USER)
                 .country(request.getCountry())
                 .password(passwordEncoder.encode(password))
@@ -106,7 +105,7 @@ public class AuthController {
 
             User user = userOpt.get();
             String token = jwtUtil.generateResetToken(user.getUsername());
-            String resetUrl = resetPasswordUrl + token;
+            String resetUrl = resetPasswordUrl+token;
             String message = "Click the link to reset your password: ";
             String subjectMessage = "Password Reset Request";
             if (emailOrPhone.contains("@")) {
