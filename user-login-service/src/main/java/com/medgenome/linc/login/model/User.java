@@ -39,9 +39,6 @@ public class User implements UserDetails {
     @NotBlank(message = "Phone number is required")
     private String phoneNum;
 
-    @NotBlank(message = "Organization name is required")
-    private String orgName;
-
     @Enumerated(EnumType.STRING)
     private Role role;
 
