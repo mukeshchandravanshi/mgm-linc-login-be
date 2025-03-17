@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/auth")
@@ -69,17 +70,28 @@ public class AuthController {
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User request) {
-        String userName = request.getEmail() != null ? request.getEmail() : request.getPhoneNum();
+        String email = request.getEmail();
+        String phoneNum = request.getPhoneNum();
         String password = request.getPassword();
-        System.out.println("lohin userName: " + userName);
+
+        // Define regex patterns for email and phone validation
+        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        String phoneRegex = "^\\+?[0-9\\-\\s]{7,15}$";
+
+        if (email != null && !Pattern.matches(emailRegex, email)) {
+            throw new RuntimeException("Invalid email format.");
+        }
+
+        if (phoneNum != null && !Pattern.matches(phoneRegex, phoneNum)) {
+            throw new RuntimeException("Invalid phone number format.");
+        }
+
+        String userName = email != null ? email : phoneNum;
+
         Optional<User> userOpt = userService.findByUserName(userName);
 
         if (userOpt.isEmpty()) {
-            if (request.getEmail() != null) {
-                throw new RuntimeException("Invalid email.");
-            } else {
-                throw new RuntimeException("Invalid phone number.");
-            }
+            throw new RuntimeException(email != null ? "Invalid email." : "Invalid phone number.");
         }
 
         User user = userOpt.get();
@@ -91,6 +103,7 @@ public class AuthController {
         String token = jwtUtil.generateToken(userName);
         return Map.of("token", token, "message", "Welcome to MedGenome!");
     }
+
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
