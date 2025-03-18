@@ -6,6 +6,7 @@ import com.medgenome.linc.login.model.ForgotPasswordRequest;
 import com.medgenome.linc.login.model.Role;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.service.EmailService;
+import com.medgenome.linc.login.service.OtpService;
 import com.medgenome.linc.login.service.SmsService;
 import com.medgenome.linc.login.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,16 +28,19 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private  final SmsService smsService;
+    private final OtpService otpService;
+
 
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService, SmsService smsService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService, SmsService smsService, OtpService otpService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.smsService = smsService;
+        this.otpService = otpService;
     }
 
     @PostMapping("/register")
@@ -119,16 +123,20 @@ public class AuthController {
             }
 
             User user = userOpt.get();
-            String token = jwtUtil.generateResetToken(user.getUsername());
-            String resetUrl = resetPasswordUrl + token;
-            String message = "Click the link to reset your password: ";
+            //Enable for token based pwd reset
+            // String token = jwtUtil.generateResetToken(user.getUsername());
+            // String resetUrl = resetPasswordUrl + token;
+
+            // OTP based
+            String otp = otpService.generateOtp(emailOrPhone);
+            String message = "You have requested to reset your password. Use the OTP below to proceed with the reset: ";
             String subjectMessage = "Password Reset Request";
 
             if (emailOrPhone.contains("@")) {
-                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage, message + resetUrl);
+                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage, message + otp);
             } else {
                 try {
-                    smsService.sendSms(user.getPhoneNum(), "Reset your password using this link: " + resetUrl);
+                    smsService.sendSms(user.getPhoneNum(), "Reset your password using this OTP: " + otp);
                 } catch (Exception smsException) {
                     System.err.println("AuthController: Failed to send SMS : " + smsException.getMessage());
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -136,7 +144,7 @@ public class AuthController {
                 }
             }
 
-            return ResponseEntity.ok(Map.of("message", "Password reset link sent successfully!"));
+            return ResponseEntity.ok(Map.of("message", "Password reset OTP sent successfully!"));
         } catch (Exception emailException) {
             System.err.println("AuthController: Failed to send EMAIL: " + emailException.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
