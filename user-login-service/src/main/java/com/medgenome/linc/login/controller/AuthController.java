@@ -6,6 +6,7 @@ import com.medgenome.linc.login.model.ForgotPasswordRequest;
 import com.medgenome.linc.login.model.Role;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.service.EmailService;
+import com.medgenome.linc.login.service.SmsService;
 import com.medgenome.linc.login.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -25,15 +26,17 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private  final SmsService smsService;
 
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService, SmsService smsService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.smsService = smsService;
     }
 
     @PostMapping("/register")
@@ -105,6 +108,38 @@ public class AuthController {
     }
 
 
+//    @PostMapping("/forgot-password")
+//    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+//        try {
+//            String emailOrPhone = request.getEmailOrPhone();
+//            Optional<User> userOpt = userService.findByUserName(emailOrPhone);
+//
+//            if (userOpt.isEmpty()) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body(Map.of("message", "User not found with provided email or phone number."));
+//            }
+//
+//            User user = userOpt.get();
+//            String token = jwtUtil.generateResetToken(user.getUsername());
+//            String resetUrl = resetPasswordUrl+token;
+//            String message = "Click the link to reset your password: ";
+//            String subjectMessage = "Password Reset Request";
+//            if (emailOrPhone.contains("@")) {
+//                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage ,
+//                        message + resetUrl);
+//            } else {
+//                smsService.sendSms(user.getPhoneNum(), "Reset your password using this link: " + resetUrl);
+//            }
+//
+//            return ResponseEntity.ok(Map.of("message", "Password reset link sent successfully!"));
+//        } catch (Exception e) {
+//            System.err.println("Error in forgotPassword: " + e.getMessage());
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Map.of("message", "Failed to process forgot password request."));
+//        }
+//    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {
@@ -118,22 +153,27 @@ public class AuthController {
 
             User user = userOpt.get();
             String token = jwtUtil.generateResetToken(user.getUsername());
-            String resetUrl = resetPasswordUrl+token;
+            String resetUrl = resetPasswordUrl + token;
             String message = "Click the link to reset your password: ";
             String subjectMessage = "Password Reset Request";
+
             if (emailOrPhone.contains("@")) {
-                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage ,
-                        message + resetUrl);
+                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage, message + resetUrl);
             } else {
-                //smsService.sendSms(user.getPhoneNum(), "Reset your password using this link: " + resetUrl);
+                try {
+                    smsService.sendSms(user.getPhoneNum(), "Reset your password using this link: " + resetUrl);
+                } catch (Exception smsException) {
+                    System.err.println("AuthController: Failed to send SMS : " + smsException.getMessage());
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("message", "Failed to send SMS. Please try again later."));
+                }
             }
 
             return ResponseEntity.ok(Map.of("message", "Password reset link sent successfully!"));
-        } catch (Exception e) {
-            System.err.println("Error in forgotPassword: " + e.getMessage());
-            e.printStackTrace();
+        } catch (Exception emailException) {
+            System.err.println("AuthController: Failed to send EMAIL: " + emailException.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Failed to process forgot password request."));
+                    .body(Map.of("message", "Failed to send Email. Please try again later.."));
         }
     }
 
