@@ -107,39 +107,6 @@ public class AuthController {
         return Map.of("token", token, "message", "Welcome to MedGenome!");
     }
 
-
-//    @PostMapping("/forgot-password")
-//    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-//        try {
-//            String emailOrPhone = request.getEmailOrPhone();
-//            Optional<User> userOpt = userService.findByUserName(emailOrPhone);
-//
-//            if (userOpt.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                        .body(Map.of("message", "User not found with provided email or phone number."));
-//            }
-//
-//            User user = userOpt.get();
-//            String token = jwtUtil.generateResetToken(user.getUsername());
-//            String resetUrl = resetPasswordUrl+token;
-//            String message = "Click the link to reset your password: ";
-//            String subjectMessage = "Password Reset Request";
-//            if (emailOrPhone.contains("@")) {
-//                emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage ,
-//                        message + resetUrl);
-//            } else {
-//                smsService.sendSms(user.getPhoneNum(), "Reset your password using this link: " + resetUrl);
-//            }
-//
-//            return ResponseEntity.ok(Map.of("message", "Password reset link sent successfully!"));
-//        } catch (Exception e) {
-//            System.err.println("Error in forgotPassword: " + e.getMessage());
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Map.of("message", "Failed to process forgot password request."));
-//        }
-//    }
-
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {
@@ -197,10 +164,4 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("message", "Password reset successfully!"));
     }
-
-
-
-
-
-
 }
