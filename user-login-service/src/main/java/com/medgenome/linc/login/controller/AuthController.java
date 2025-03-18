@@ -152,24 +152,60 @@ public class AuthController {
         }
     }
 
+
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestBody Map<String, String> request) {
-        String newPassword = request.get("newPassword");
-        String username;
-
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         try {
-            username = jwtUtil.extractUsername(token);
+            String emailOrPhone = request.get("emailOrPhone");
+            String otp = request.get("otp");
+            String oldPassword = request.get("oldPassword");
+            String newPassword = request.get("newPassword");
+            String confirmPassword = request.get("confirmPassword");
+
+            // Check if user exists
+            Optional<User> userOpt = userService.findByUserName(emailOrPhone);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found with provided email or phone number."));
+            }
+
+            User user = userOpt.get();
+
+            // Validate OTP
+            if (!otpService.validateOtp(emailOrPhone, otp)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Invalid or expired OTP."));
+            }
+
+            // Validate Old Password - Ensure it matches the stored password
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Old password is incorrect."));
+            }
+
+            // Check if New Password and Confirm Password match
+            if (!newPassword.equals(confirmPassword)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "New password and Confirm password do not match."));
+            }
+
+            // Prevent Reuse of Old Password
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "New password cannot be the same as the current password."));
+            }
+
+            // Update password securely
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userService.registerUser(user);
+
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid or expired token."));
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to reset password. Please try again later."));
         }
-
-        User user = userService.findByUserName(username)
-                .orElseThrow(() -> new RuntimeException("User not found."));
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userService.updateUser(user);
-
-        return ResponseEntity.ok(Map.of("message", "Password reset successfully!"));
     }
+
+
 }
