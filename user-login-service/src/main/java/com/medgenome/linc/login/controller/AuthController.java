@@ -3,6 +3,7 @@ package com.medgenome.linc.login.controller;
 
 import com.medgenome.linc.login.config.JwtUtil;
 import com.medgenome.linc.login.model.ForgotPasswordRequest;
+import com.medgenome.linc.login.model.ResetPasswordRequest;
 import com.medgenome.linc.login.model.Role;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.service.EmailService;
@@ -154,13 +155,13 @@ public class AuthController {
 
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         try {
-            String emailOrPhone = request.get("emailOrPhone");
-            String otp = request.get("otp");
-            String oldPassword = request.get("oldPassword");
-            String newPassword = request.get("newPassword");
-            String confirmPassword = request.get("confirmPassword");
+            String emailOrPhone = request.getEmailOrPhone();
+            String otp = request.getOtp();
+            String oldPassword = request.getOldPassword();
+            String newPassword = request.getNewPassword();
+            String confirmPassword = request.getConfirmPassword();
 
             // Check if user exists
             Optional<User> userOpt = userService.findByUserName(emailOrPhone);
