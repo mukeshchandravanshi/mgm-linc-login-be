@@ -24,17 +24,20 @@ public class OtpService {
     }
 
     public boolean validateOtp(String key, String otp) {
+        // Check if OTP exists and matches
         if (!otpStorage.containsKey(key) || !otp.equals(otpStorage.get(key))) {
-            return false;
+            return false; // Invalid OTP
         }
+
+        // Check if OTP has expired
         if (System.currentTimeMillis() > otpExpiry.get(key)) {
             otpStorage.remove(key);
             otpExpiry.remove(key);
-            return false;
+            return false; // Expired OTP
         }
-        otpStorage.remove(key);
-        otpExpiry.remove(key);
-        return true;
+
+        return true; // OTP is valid
     }
+
 }
 
