@@ -3,10 +3,10 @@ package com.medgenome.linc.login.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -49,6 +49,30 @@ public class User implements UserDetails {
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
+    @NotBlank(message = "Account name is required")
+    private String accountName;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    @Column(updatable = false)
+    private LocalDateTime createdDt;
+
+    private LocalDateTime updatedDt;
+
+    // Initialize createdDt on persist and updatedDt on update
+    @PrePersist
+    protected void onCreate() {
+        this.createdDt = LocalDateTime.now();
+        this.updatedDt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedDt = LocalDateTime.now();
+    }
+
+    // Spring Security methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(() -> "ROLE_" + role.name());
@@ -56,7 +80,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email != null ? email : phoneNum; // Fallback to phone number if email is null
+        return email != null ? email : phoneNum;
     }
 
     @Override
