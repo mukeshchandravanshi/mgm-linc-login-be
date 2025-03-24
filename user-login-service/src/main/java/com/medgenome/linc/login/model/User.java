@@ -47,9 +47,9 @@ public class User implements UserDetails {
 
     @NotBlank(message = "Create Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
-    private String createPassword;
+    private String password;
 
-   
+
     @Size(min = 6, message = "Password must be at least 6 characters long")
     @Transient
     private String confirmPassword;
@@ -85,7 +85,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return "";
+        return password;
     }
 
     @Override
