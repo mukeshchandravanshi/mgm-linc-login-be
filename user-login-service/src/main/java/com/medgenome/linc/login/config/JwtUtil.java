@@ -6,16 +6,18 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    // Use the secretKeyFor method to create a secure key for HS256
-    private  final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 256-bit key
+    // Secure key for HS256
+    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final long EXPIRATION_TIME = 600000; // 10 minutes
+    private final long OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 Minutes for OTP
 
-    private final long EXPIRATION_TIME = 600000; // 1 hour in milliseconds
 
-    public  String generateToken(String userName) {
+    public String generateToken(String userName) {
         return Jwts.builder()
                 .setSubject(userName)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
@@ -24,12 +26,7 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return extractClaim(token, Claims::getSubject);
     }
 
     public boolean validateToken(String token, String userName) {
@@ -37,13 +34,7 @@ public class JwtUtil {
     }
 
     private boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
-        System.out.println("Token expiration time: " + expiration);
+        Date expiration = extractClaim(token, Claims::getExpiration);
         return expiration.before(new Date());
     }
 
@@ -55,5 +46,52 @@ public class JwtUtil {
                 .compact();
     }
 
+    // -------------------- New Methods for OTP --------------------
+
+    // Generate JWT Token with OTP
+    public String generateOtpToken(String emailOrPhone, String otp) {
+
+        String otpToken = Jwts.builder()
+                .setSubject(emailOrPhone)
+                .claim("otp", otp)
+                .setExpiration(new Date(System.currentTimeMillis() + OTP_EXPIRATION_TIME))
+                .signWith(secretKey)
+                .compact();
+        System.out.println("otpToken:   " + otpToken);
+        return  otpToken;
+    }
+
+    // Extract OTP from Token
+    public String extractOtp(String token) {
+        return extractClaim(token, claims -> claims.get("otp", String.class));
+    }
+
+    // Extract Email or Phone from Token
+    public String extractEmailOrPhone(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    // Validate OTP Token
+    public boolean validateOtpToken(String token, String providedOtp) {
+        try {
+            if (isTokenExpired(token)) {
+                throw new RuntimeException("Token has expired.");
+            }
+            String storedOtp = extractOtp(token);
+            return storedOtp.equals(providedOtp);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid OTP token: " + e.getMessage());
+        }
+    }
+
+    // Generic method to extract claims
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claimsResolver.apply(claims);
+    }
 
 }
