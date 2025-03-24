@@ -12,10 +12,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-@Data // Generates getters, setters, toString, equals, and hashCode
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // Enables the builder pattern for object creation
+@Builder
 public class User implements UserDetails {
 
     @Id
@@ -45,9 +45,14 @@ public class User implements UserDetails {
     @NotBlank(message = "Country is required")
     private String country;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = "Create Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
-    private String password;
+    private String createPassword;
+
+   
+    @Size(min = 6, message = "Password must be at least 6 characters long")
+    @Transient
+    private String confirmPassword;
 
     @NotBlank(message = "Account name is required")
     private String accountName;
@@ -76,6 +81,11 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(() -> "ROLE_" + role.name());
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
     }
 
     @Override
