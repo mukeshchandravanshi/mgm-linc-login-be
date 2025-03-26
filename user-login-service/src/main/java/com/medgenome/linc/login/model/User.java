@@ -28,14 +28,9 @@ public class User implements UserDetails {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
     private String email;
 
-    @Pattern(
-            regexp = "^\\+?[0-9\\-\\s]{7,15}$",
-            message = "Invalid phone number format"
-    )
     @NotBlank(message = "Phone number is required")
     private String phoneNum;
 

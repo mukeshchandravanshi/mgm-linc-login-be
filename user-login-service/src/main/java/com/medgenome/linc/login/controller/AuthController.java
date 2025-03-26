@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/auth")
@@ -55,13 +54,16 @@ public class AuthController {
 
         // Validate required fields
         if (userName == null || password == null || confirmPassword == null) {
-            throw new RuntimeException("Username, createPasswd, and confirmPasswd are required.");
+            throw new RuntimeException("Username, password, and confirmPasswd are required.");
         }
 
         // Validate if passwords match
         if (!password.equals(confirmPassword)) {
             throw new RuntimeException("Password and Confirm Password do not match.");
         }
+
+        // Validate email or phone number format
+        emailAndPhoneValidator.validateEmailAndPhone(request.getEmail(), request.getPhoneNum());
 
         // Check if user already exists
         if (userService.findByUserName(userName).isPresent()) {
@@ -91,7 +93,7 @@ public class AuthController {
         return Map.of("token", token, "message", "You are successfully registered to MedGenome.");
     }
 
-    @PostMapping("/login")
+        @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody User request) {
         String email = request.getEmail();
         String phoneNum = request.getPhoneNum();
@@ -104,7 +106,7 @@ public class AuthController {
         Optional<User> userOpt = userService.findByUserName(emailOrPhone);
 
         if (userOpt.isEmpty()) {
-            throw new RuntimeException(email != null ? "Invalid email." : "Invalid phone number.");
+            throw new RuntimeException(emailOrPhone.contains("@")? "Invalid email." : "Invalid phone number.");
         }
 
         User user = userOpt.get();
@@ -172,7 +174,7 @@ public class AuthController {
         Optional<User> userOpt = userService.findByUserName(emailOrPhone);
 
         if (userOpt.isEmpty()) {
-            throw new RuntimeException(email != null ? "Invalid email." : "Invalid phone number.");
+            throw new RuntimeException(email != null ? "Email not registered." : "Phone number not registered.");
         }
 
         User user = userOpt.get();
@@ -193,20 +195,26 @@ public class AuthController {
         }
     }
 
-
     @PostMapping("/verify-otp")
     public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest request) {
         String otp = request.getOtp();
+        String emailOrPhone = request.getEmailOrPhone();
 
         if (otp == null || otp.isBlank()) {
             throw new RuntimeException("OTP is required.");
         }
 
+        Optional<User> userOpt = userService.findByUserName(emailOrPhone);
+
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException((emailOrPhone.contains("@"))? "Email not registered." : "Phone number not registered.");
+        }
+
         // Find emailOrPhone using the OTP from the OTP storage
-        String emailOrPhone = otpUtil.getEmailOrPhoneFromOtp(otp);
+      //  String emailOrPhone = otpUtil.getEmailOrPhoneFromOtp(otp);
 
         if (emailOrPhone == null) {
-            throw new RuntimeException("Invalid or expired OTP.");
+            throw new RuntimeException("Email or Phone number not registered..");
         }
 
         // Validate OTP
@@ -259,8 +267,48 @@ public class AuthController {
         }
     }
 
+    @PostMapping("resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody ResendOtpRequest request) {
+        String emailOrPhone = request.getEmailOrPhone();
 
+        Optional<User> userOpt = userService.findByUserName(emailOrPhone);
+        User user = userOpt.get();
 
+        // Generate OTP
+        String otp = otpUtil.generateOtp(emailOrPhone);
+        String message = "You have requested for login OTP. Use the OTP below to proceed with the login: ";
+        String subjectMessage = "Resend OTP";
+
+        boolean emailSent = false;
+        boolean smsSent = false;
+
+        // Send OTP via Email
+        try {
+            emailService.sendResetPasswordEmail(user.getEmail(), subjectMessage, message + otp);
+            emailSent = true;
+        } catch (Exception emailException) {
+            System.err.println("AuthController: Failed to send EMAIL: " + emailException.getMessage());
+        }
+
+        // Send OTP via SMS
+        try {
+            smsService.sendSms(user.getPhoneNum(), "Login using OTP: " + otp);
+            smsSent = true;
+        } catch (Exception smsException) {
+            System.err.println("AuthController: Failed to send SMS: " + smsException.getMessage());
+        }
+
+        // Response Handling
+        if (!emailSent && !smsSent) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to send OTP via both Email and SMS. Please try again later."));
+        } else if (!emailSent) {
+            return ResponseEntity.ok(Map.of("message", "OTP sent successfully via SMS. Failed to send via Email."));
+        } else if (!smsSent) {
+            return ResponseEntity.ok(Map.of("message", "OTP sent successfully via Email. Failed to send via SMS."));
+        }
+        return ResponseEntity.ok(Map.of("message", "OTP sent successfully via Email and SMS!"));
+    }
 
 
 //    @PostMapping("/reset-password")

@@ -16,7 +16,7 @@ public class JwtUtil {
     private final long EXPIRATION_TIME = 600000; // 10 minutes
     private final long OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 Minutes for OTP
 
-
+    //Generate JWT token
     public String generateToken(String userName) {
         return Jwts.builder()
                 .setSubject(userName)
@@ -29,6 +29,7 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
+    //Validate JWT token
     public boolean validateToken(String token, String userName) {
         return userName.equals(extractUsername(token)) && !isTokenExpired(token);
     }
