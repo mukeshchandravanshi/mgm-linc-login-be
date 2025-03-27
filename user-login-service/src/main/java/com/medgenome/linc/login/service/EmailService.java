@@ -16,8 +16,8 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendResetPasswordEmail(String to, String subject, String content) throws MessagingException {
-       System.out.println("sending reset password email "+to+"  "+subject+"  "+content);
+    public void sendEmail(String to, String subject, String content) throws MessagingException {
+       System.out.println("sending OTP email "+to+"  "+subject+"  "+content);
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(to);

@@ -1,4 +1,5 @@
 package com.medgenome.linc.login.util.validator;
+import com.medgenome.linc.login.model.User;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
@@ -19,4 +20,15 @@ public class EmailAndPhoneValidator {
         }
     }
 
+    public String validateAndGetEmailOrPhone(User request) {
+        String emailOrPhone = (request.getEmail() != null) ? request.getEmail() : request.getPhoneNum();
+        if (emailOrPhone == null || emailOrPhone.isBlank()) {
+            throw new RuntimeException("Email or phone number is required.");
+        }
+        return emailOrPhone;
+    }
+
+    public static boolean isEmail(String input) {
+        return input != null && input.contains("@");
+    }
 }

@@ -36,6 +36,8 @@ public class UserService implements UserDetailsService {
 
     public User registerUser(User user) {
         System.out.println("save user:   "+user.getUsername()+", "+user.getPassword()+","+user.getRole());
+
+
         return userRepository.save(user);//  JPA's save method will register new user
     }
 

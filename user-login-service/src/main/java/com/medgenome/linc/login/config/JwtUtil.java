@@ -47,6 +47,26 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateRefreshToken(String userName) {
+        return Jwts.builder()
+                .setSubject(userName)
+                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 24 hours
+                .signWith(secretKey)
+                .compact();
+    }
+
+    //Method to Validate Token Without Expiration Check
+    public boolean validateTokenWithoutExpiration(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
+
     // -------------------- New Methods for OTP --------------------
 
     // Generate JWT Token with OTP
