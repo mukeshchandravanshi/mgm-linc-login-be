@@ -15,13 +15,11 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
-    private final  EmailService emailService;
 
-    public UserService(UserRepository userRepository, JwtUtil jwtUtil, EmailService emailService) {
+
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
-        this.emailService = emailService;
+
     }
 
     @Override
