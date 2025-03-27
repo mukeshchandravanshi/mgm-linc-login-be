@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 @Component
 public class EmailAndPhoneValidator {
 
-    public void validateEmailAndPhone(String email, String phoneNum) {
+    public static void validateEmailAndPhone(String email, String phoneNum) {
         String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
         String phoneRegex = "^\\+?[0-9\\-\\s]{7,15}$";
 
