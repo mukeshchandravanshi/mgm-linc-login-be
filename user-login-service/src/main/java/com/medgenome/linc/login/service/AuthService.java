@@ -30,14 +30,8 @@ public class AuthService {
         if (otp == null || otp.isBlank()) {
             throw new RuntimeException("OTP is required.");
         }
-        // Find emailOrPhone using the OTP from the OTP storage
-        String emailOrPhoneFromOtp = otpUtil.getEmailOrPhoneFromOtp(otp);
 
-        if (emailOrPhone == null) {
-            throw new RuntimeException("Invalid or expired OTP.");
-        }
-
-        boolean validOtp = otpUtil.validateOtp(emailOrPhoneFromOtp, otp);
+        boolean validOtp = otpUtil.validateOtp(emailOrPhone, otp);
         System.out.println("validOtp"+ validOtp);
 
         if (!validOtp) {
@@ -45,7 +39,7 @@ public class AuthService {
         }
 
         // Check if the user exists in temporary storage for registration
-        User tempUser = UserObjectUtil.getUser(emailOrPhoneFromOtp);
+        User tempUser = UserObjectUtil.getUser(emailOrPhone);
         System.out.println("tempUser"+tempUser);
         if (tempUser != null) {
             return registerUser(tempUser, emailOrPhone);
