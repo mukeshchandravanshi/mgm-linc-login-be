@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.medgenome</groupId>
-	<artifactId>user-login-service</artifactId>
+	<artifactId>mgm-linc-login-be</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>user-login-service</name>
 	<description>User login project </description>

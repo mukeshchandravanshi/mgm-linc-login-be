@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 @Slf4j
 public class AuthController {
 
@@ -74,7 +74,7 @@ public class AuthController {
     }
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<Map<String, String>> resend(@RequestBody ResendOtpRequest request) {
+    public ResponseEntity<Map<String, String>> resendOtp(@RequestBody ResendOtpRequest request) {
         String emailOrPhone = request.getEmailOrPhone();
 
         // Find user safely
@@ -83,7 +83,6 @@ public class AuthController {
 
         // Call the reusable OTP method
         Map<String, String> response = resentOtpService.generateAndSendOtp(user, emailOrPhone, "Resend OTP");
-
         return ResponseEntity.ok(response);
     }
 

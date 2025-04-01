@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class ResetPasswordRequest {
 
+    @NotBlank(message = "Email or Phone number is required.")
     private String emailOrPhone;
 
     @NotBlank(message = "OTP is required.")
