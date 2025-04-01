@@ -47,7 +47,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/h2-console/**", "/actuator/**").permitAll() // Allow public access to H2 and Actuator
+                        .requestMatchers("/v1/auth/**", "/h2-console/**", "/actuator/**").permitAll() // Allow public access to H2 and Actuator
                         .anyRequest().authenticated() // Secure other endpoints
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // Allow H2 frames
