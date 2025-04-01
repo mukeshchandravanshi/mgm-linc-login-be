@@ -5,7 +5,7 @@ import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.service.EmailService;
 import com.medgenome.linc.login.service.SmsService;
 import com.medgenome.linc.login.service.UserService;
-import com.medgenome.linc.login.util.validator.EmailAndPhoneValidator;
+import com.medgenome.linc.login.util.validator.InputValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +30,7 @@ public class SendOtpService {
             throw new RuntimeException("Email or phone number is required.");
         }
 
-        // Validate Email or Phone number format
-        EmailAndPhoneValidator.validateEmailAndPhone(email, phoneNum);
+
 
         // Check if user exists
         Optional<User> userOpt = userService.findByUserName(emailOrPhone);

@@ -2,7 +2,6 @@ package com.medgenome.linc.login.service;
 
 import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.User;
-import com.medgenome.linc.login.util.validator.EmailAndPhoneValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -34,7 +33,7 @@ public class LoginAnOtherWayService {
         }
 
         // Validate email or phone number format
-        EmailAndPhoneValidator.validateEmailAndPhone(email, phoneNum);
+
 
         // Check if the user exists
         Optional<User> userOpt = userService.findByUserName(emailOrPhone);

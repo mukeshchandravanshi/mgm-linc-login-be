@@ -2,8 +2,7 @@ package com.medgenome.linc.login.service;
 
 import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.User;
-
-import com.medgenome.linc.login.util.validator.EmailAndPhoneValidator;
+import com.medgenome.linc.login.util.validator.InputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,17 +18,16 @@ public class OtpService {
     private final SmsService smsService;
     private final OtpUtil otpUtil;
     private static final Logger logger = LoggerFactory.getLogger(OtpService.class);
-    private final EmailAndPhoneValidator emailAndPhoneValidator;
 
-    public OtpService(EmailService emailService, SmsService smsService, OtpUtil otpUtil, EmailAndPhoneValidator emailAndPhoneValidator) {
+
+    public OtpService(EmailService emailService, SmsService smsService, OtpUtil otpUtil) {
         this.emailService = emailService;
         this.smsService = smsService;
         this.otpUtil = otpUtil;
-        this.emailAndPhoneValidator = emailAndPhoneValidator;
     }
     public ResponseEntity<Map<String, String>> handleOtpSending(User request) {
 
-        String emailOrPhone = emailAndPhoneValidator.validateAndGetEmailOrPhone(request);
+        String emailOrPhone = request.getEmail()!=null ? request.getEmail() : request.getPhoneNum();
         boolean isNormalLogin = request.getPassword() != null && !request.getPassword().isBlank();
         return sendOtp(emailOrPhone, request, isNormalLogin);
     }
@@ -55,7 +53,7 @@ public class OtpService {
                 }
             } else {
                 // Send to one based on input
-                if (EmailAndPhoneValidator.isEmail(emailOrPhone)) {
+                if (InputValidator.isEmail(emailOrPhone)) {
                     emailService.sendEmail(emailOrPhone, subjectMessage, message);
                     emailSent = true;
                 } else {
@@ -90,7 +88,5 @@ public class OtpService {
                     .body(Map.of("message", "Failed to send OTP. Please try again later."));
         }
     }
-
-
 }
 

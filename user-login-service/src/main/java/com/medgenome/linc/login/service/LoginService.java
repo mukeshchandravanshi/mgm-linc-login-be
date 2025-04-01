@@ -1,7 +1,6 @@
 package com.medgenome.linc.login.service;
 import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.User;
-import com.medgenome.linc.login.util.validator.EmailAndPhoneValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,6 @@ public class LoginService {
         String emailOrPhone = (email != null) ? email : phoneNum;
 
         // Validate email or phone format
-        EmailAndPhoneValidator.validateEmailAndPhone(email, phoneNum);
 
         // Check if user exists
         Optional<User> userOpt = userService.findByUserName(emailOrPhone);

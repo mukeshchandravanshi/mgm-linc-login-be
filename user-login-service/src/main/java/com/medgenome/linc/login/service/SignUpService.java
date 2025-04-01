@@ -3,6 +3,7 @@ package com.medgenome.linc.login.service;
 import com.medgenome.linc.login.model.Role;
 import com.medgenome.linc.login.model.Status;
 import com.medgenome.linc.login.model.User;
+import com.medgenome.linc.login.util.validator.InputValidator;
 import com.medgenome.linc.login.util.validator.UserObjectUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,19 +26,13 @@ public class SignUpService {
 
     public void registerUser(User request) {
         // Validate Input
-        String emailOrPhone = Optional.ofNullable(request.getEmail()).orElse(request.getPhoneNum());
+        InputValidator.validate(request);
 
-        if (emailOrPhone == null || request.getPassword() == null || request.getConfirmPassword() == null) {
-            throw new RuntimeException("Email/Phone, Password, and Confirm Password are required.");
-        }
-
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Password and Confirm Password do not match.");
-        }
+        String emailOrPhone = request.getEmail()!=null?request.getEmail():request.getPhoneNum();
 
         // Check User Existence
         if (userService.findByUserName(emailOrPhone).isPresent()) {
-            throw new RuntimeException(emailOrPhone + " already exists. Please login or reset password.");
+            throw new RuntimeException(emailOrPhone + " already exists. Please signup with another email or phone number.");
         }
 
         // Build User

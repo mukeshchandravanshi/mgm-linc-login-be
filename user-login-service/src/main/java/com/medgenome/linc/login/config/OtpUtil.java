@@ -22,6 +22,8 @@ public class OtpUtil {
     }
 
     public boolean validateOtp(String emailOrPhone, String otp) {
+        System.out.println("emailOrPhone"+emailOrPhone);
+        System.out.println("otp"+ otp);
         if (!otpTokenStorage.containsKey(emailOrPhone)) {
             return false; // OTP not found or expired
         }

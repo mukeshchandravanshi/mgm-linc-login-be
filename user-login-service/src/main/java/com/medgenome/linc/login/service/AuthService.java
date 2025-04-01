@@ -25,16 +25,28 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public Map<String, String> verifyOtp(String emailOrPhone, String otp) {
+        System.out.println("emailOrPhone"+emailOrPhone);
+        System.out.println("otp"+ otp);
         if (otp == null || otp.isBlank()) {
             throw new RuntimeException("OTP is required.");
         }
+        // Find emailOrPhone using the OTP from the OTP storage
+        String emailOrPhoneFromOtp = otpUtil.getEmailOrPhoneFromOtp(otp);
 
-        if (!otpUtil.validateOtp(emailOrPhone, otp)) {
+        if (emailOrPhone == null) {
+            throw new RuntimeException("Invalid or expired OTP.");
+        }
+
+        boolean validOtp = otpUtil.validateOtp(emailOrPhoneFromOtp, otp);
+        System.out.println("validOtp"+ validOtp);
+
+        if (!validOtp) {
             throw new RuntimeException("Invalid or expired OTP.");
         }
 
         // Check if the user exists in temporary storage for registration
-        User tempUser = UserObjectUtil.getUser(emailOrPhone);
+        User tempUser = UserObjectUtil.getUser(emailOrPhoneFromOtp);
+        System.out.println("tempUser"+tempUser);
         if (tempUser != null) {
             return registerUser(tempUser, emailOrPhone);
         } else {

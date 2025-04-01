@@ -61,6 +61,7 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest request) {
         String emailOrPhone = request.getEmailOrPhone();
+        System.out.println("verify-otp-emailOrPhone"+emailOrPhone);
         String otp = request.getOtp();
 
         Map<String, String> response = authService.verifyOtp(emailOrPhone, otp);
