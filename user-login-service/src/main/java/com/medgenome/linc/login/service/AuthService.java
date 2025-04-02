@@ -6,7 +6,7 @@ import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.TokenRequest;
 import com.medgenome.linc.login.model.TokenResponse;
 import com.medgenome.linc.login.model.User;
-import com.medgenome.linc.login.util.validator.UserObjectUtil;
+import com.medgenome.linc.login.util.UserObjectUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

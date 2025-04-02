@@ -56,12 +56,14 @@ public class OtpUtil {
     public boolean validateOtp(String emailOrPhone, String otp) {
         System.out.println("Validating OTP for: " + emailOrPhone);
         System.out.println("Entered OTP: " + otp);
+        System.out.println("TempUserFromOTPUtil: " + UserObjectUtil.getUser(emailOrPhone));
 
         // Fetch user either from DB or temporary storage
         User user = userService.findByUserName(emailOrPhone).orElse(null);
 
         if (user == null) {
             user = UserObjectUtil.getUser(emailOrPhone);
+            System.out.println("User not found for OTP generation."+user);
             if (user == null) {
                 throw new RuntimeException("User not found for OTP validation.");
             }

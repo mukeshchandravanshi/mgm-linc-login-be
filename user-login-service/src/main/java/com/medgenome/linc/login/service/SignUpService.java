@@ -1,33 +1,30 @@
 package com.medgenome.linc.login.service;
 
 import com.medgenome.linc.login.model.Role;
+import com.medgenome.linc.login.model.SendOtpRequest;
 import com.medgenome.linc.login.model.Status;
 import com.medgenome.linc.login.model.User;
-import com.medgenome.linc.login.util.validator.InputValidator;
-import com.medgenome.linc.login.util.validator.UserObjectUtil;
+import com.medgenome.linc.login.validator.InputValidator;
+import com.medgenome.linc.login.util.UserObjectUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class SignUpService {
 
     private final UserService userService;
-    private final OtpService otpService;
     private final PasswordEncoder passwordEncoder;
+    private final SendOtpService sendOtpService;
 
-    public SignUpService(UserService userService,
-                         UserObjectUtil userObjectUtil, OtpService otpService, PasswordEncoder passwordEncoder) {
+    public SignUpService(UserService userService,PasswordEncoder passwordEncoder, SendOtpService sendOtpService) {
         this.userService = userService;
-        this.otpService = otpService;
         this.passwordEncoder = passwordEncoder;
+        this.sendOtpService = sendOtpService;
     }
 
     public void registerUser(User request) {
         // Validate Input
         InputValidator.validate(request);
-
         String emailOrPhone = request.getEmail()!=null?request.getEmail():request.getPhoneNum();
 
         // Check User Existence
@@ -49,7 +46,13 @@ public class SignUpService {
                 .build();
         // Save User Temporarily
         UserObjectUtil.saveUser(emailOrPhone, user);
+        System.out.println("Temp user: " + UserObjectUtil.getUser(emailOrPhone));
         // Send OTP
-        otpService.handleOtpSending(user);
+        // userOtpService.handleOtpSending(user);
+        // Now, send OTP to the user
+        SendOtpRequest sendOtpRequest = new SendOtpRequest();
+        sendOtpRequest.setEmailOrPhone(emailOrPhone);
+        sendOtpService.sendOtp(sendOtpRequest);
+
     }
 }
