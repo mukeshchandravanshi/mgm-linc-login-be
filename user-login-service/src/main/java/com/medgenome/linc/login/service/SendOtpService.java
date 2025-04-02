@@ -27,7 +27,8 @@ public class SendOtpService {
 
         // Determine request type using helper methods
         boolean isSignUp = UserObjectUtil.getUser(request.getEmailOrPhone()) != null;
-        boolean isLoginAnotherWay = !isSignUp(request) && !isNormalLogin(request);
+        boolean isNormalLogin = request.getPassword() != null && !request.getPassword().isBlank();
+        boolean isLoginAnotherWay = !isSignUp && !isNormalLogin;
 
         // Fetch User Based on Request Type
         if (isSignUp) {
@@ -115,7 +116,7 @@ public class SendOtpService {
 
     // Helper Method: Checks if the request is for Login Another Way
     private boolean isLoginAnotherWay(SendOtpRequest request) {
-        return !isSignUp(request) && !isNormalLogin(request) && !isForgotPassword(request);
+        return !isSignUp(request) && !isNormalLogin(request);
     }
 }
 
