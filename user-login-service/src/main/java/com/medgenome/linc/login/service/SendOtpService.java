@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -74,42 +74,35 @@ public class SendOtpService {
    }
 
     private boolean sendOtpByEmail(String email, String subject, String message) {
-        if (email == null) return false;
+        if (email == null || email.isBlank()) {
+            System.err.println("LoginService: Email is null or blank, skipping OTP email.");
+            return false;
+        }
         try {
             emailService.sendEmail(email, subject, message);
             return true;
         } catch (Exception e) {
-            System.err.println("LoginService: Failed to send Email: " + e.getMessage());
+            System.err.println("LoginService: Failed to send OTP Email to " + email + ". Error: " + e.getMessage());
             return false;
         }
     }
 
-//    private boolean sendOtpBySms(String phoneNum, String message) {
-//        if (phoneNum == null) return false;
-//        try {
-//            smsService.sendSms(phoneNum, message);
-//            return true;
-//        } catch (Exception e) {
-//            System.err.println("LoginService: Failed to send SMS: " + e.getMessage());
-//            return false;
-//        }
-//    }
-
-private boolean sendOtpBySms(String phoneNum, String message) {
-    try {
-        if (phoneNum != null && !phoneNum.isBlank()) {
-            smsService.sendSms(phoneNum, message);
-            return true;  // ✅ SMS sent successfully
+    private boolean sendOtpBySms(String phoneNum, String message) {
+        if (phoneNum == null || phoneNum.isBlank()) {
+            System.err.println("LoginService: Phone number is null or blank, skipping OTP SMS.");
+            return false;
         }
-    } catch (Exception e) {
-        System.out.println("LoginService: Failed to send SMS: " + e.getMessage());
-        return false;  // ❌ SMS sending failed
+        try {
+            smsService.sendSms(phoneNum, message);
+            return true;
+        } catch (Exception e) {
+            System.err.println("LoginService: Failed to send OTP SMS to " + phoneNum + ". Error: " + e.getMessage());
+            return false;
+        }
     }
-    return false;
-}
-
 
     private Map<String, String> generateOtpResponse(boolean emailSent, boolean smsSent) {
+        // If both attempts failed, throw an error
         if (!emailSent && !smsSent) {
             throw new RuntimeException("Failed to send OTP via both Email and SMS.");
         } else if (!emailSent) {
@@ -125,19 +118,14 @@ private boolean sendOtpBySms(String phoneNum, String message) {
         return UserObjectUtil.getUser(request.getEmailOrPhone()) != null;
     }
 
-    // Helper Method: Checks if the request is for Normal Login
-    private boolean isNormalLogin(SendOtpRequest request) {
-        return request.getPassword() != null && !request.getPassword().isBlank();
-    }
-
-    //Helper Method: Checks if the request is for Forgot Password
-    private boolean isForgotPassword(SendOtpRequest request) {
-        return !isSignUp(request) && request.getEmailOrPhone() != null && (request.getPassword() == null || request.getPassword().isBlank());
-    }
-
     // Helper Method: Checks if the request is for Login Another Way
-    private boolean isLoginAnotherWay(SendOtpRequest request) {
-        return !isSignUp(request) && !isNormalLogin(request);
+    private boolean isLoginAnotherWay() {
+        // Get the current HTTP request
+        HttpServletRequest httpRequest = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        // Extract the endpoint path
+        String requestURI = httpRequest.getRequestURI();
+        // Dynamically determine request type
+        return requestURI.contains("/auth/login-another-way");
     }
 }
 
