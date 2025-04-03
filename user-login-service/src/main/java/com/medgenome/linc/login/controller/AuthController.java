@@ -18,7 +18,6 @@ public class AuthController {
     private final SignUpService signUpService;
     private final AuthService authService;
     private final SendOtpService sendOtpService;
-    private final UserService userService;
     private final PasswordService passwordService;
     private final UserValidator userValidator;
 
@@ -26,11 +25,10 @@ public class AuthController {
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
-    public AuthController(SignUpService signUpService, AuthService authService, SendOtpService sendOtpService, UserService userService, PasswordService passwordService, UserValidator userValidator) {
+    public AuthController(SignUpService signUpService, AuthService authService, SendOtpService sendOtpService,PasswordService passwordService, UserValidator userValidator) {
         this.signUpService = signUpService;
         this.authService = authService;
         this.sendOtpService = sendOtpService;
-        this.userService = userService;
         this.passwordService = passwordService;
         this.userValidator = userValidator;
     }
@@ -96,9 +94,9 @@ public class AuthController {
         return authService.refreshToken(tokenRequest);
     }
 
-//    @PostMapping("/send-otp")
-//    public ResponseEntity<Map<String, String>> sendOtp(@RequestBody User request) {
-//        return ResponseEntity.ok(sendOtpService.handleOtpSending(request));
-//    }
+    @PostMapping("/send-otp")
+    public ResponseEntity<Map<String, String>> sendOtp(@RequestBody SendOtpRequest request) {
+        return ResponseEntity.ok(sendOtpService.sendOtp(request));
+    }
 
 }
