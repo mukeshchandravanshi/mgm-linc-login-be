@@ -17,7 +17,7 @@ public class EmailService {
     }
 
     public void sendEmail(String to, String subject, String content) throws MessagingException {
-       System.out.println("sending OTP email "+to+"  "+subject+"  "+content);
+        System.out.println("sending OTP email " + to + "  " + subject + "  " + content);
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(to);

@@ -22,7 +22,7 @@ public class SignUpService {
         this.sendOtpService = sendOtpService;
     }
 
-    public void registerUser(User request) {
+    public void signUpUser(User request) {
         // Validate Input
         InputValidator.validate(request);
         String emailOrPhone = request.getEmail() != null ? request.getEmail() : request.getPhoneNum();

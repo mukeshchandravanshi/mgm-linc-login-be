@@ -19,12 +19,12 @@ public class SmsService {
 
     public void sendSms(String to, String message) {
 
-            Twilio.init(twilioAccountSid, twilioAuthToken);
-            Message.creator(
-                    new com.twilio.type.PhoneNumber(to),
-                    new com.twilio.type.PhoneNumber(twilioPhoneNumber),
-                    message
-            ).create();
+        Twilio.init(twilioAccountSid, twilioAuthToken);
+        Message.creator(
+                new com.twilio.type.PhoneNumber(to),
+                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
+                message
+        ).create();
 
     }
 }

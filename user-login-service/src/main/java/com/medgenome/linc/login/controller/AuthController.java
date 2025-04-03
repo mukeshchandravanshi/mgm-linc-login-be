@@ -35,7 +35,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<Map<String, String>> signUp(@RequestBody User request) {
-        signUpService.registerUser(request);
+        signUpService.signUpUser(request);
         return ResponseEntity.ok(Map.of("message", "User registration initiated. OTP sent successfully!"));
     }
 
