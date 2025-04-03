@@ -4,10 +4,14 @@ import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.SendOtpRequest;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.util.UserObjectUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -18,53 +22,56 @@ public class SendOtpService {
     private final OtpUtil otpUtil;
     private final EmailService emailService;
     private final SmsService smsService;
+    
+   public Map<String, String> sendOtp(SendOtpRequest request) {
+       String emailOrPhone = request.getEmailOrPhone();
+       User user;
+       boolean emailSent = false;
+       boolean smsSent = false;
 
-    public Map<String, String> sendOtp(SendOtpRequest request) {
-        String emailOrPhone = request.getEmailOrPhone();
-        User user;
-        boolean emailSent = false;
-        boolean smsSent = false;
+       boolean isSignUp = UserObjectUtil.getUser(emailOrPhone) != null;
 
-        // Determine request type using helper methods
-        boolean isSignUp = UserObjectUtil.getUser(request.getEmailOrPhone()) != null;
-        boolean isNormalLogin = request.getPassword() != null && !request.getPassword().isBlank();
-        boolean isLoginAnotherWay = !isSignUp && !isNormalLogin;
+       // 🔍 Get the current HTTP request
+       HttpServletRequest httpRequest =
+               ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
 
-        // Fetch User Based on Request Type
-        if (isSignUp) {
-            user = UserObjectUtil.getUser(emailOrPhone); // Fetch from temporary storage
-        } else {
-            user = userService.findByUserName(emailOrPhone)
-                    .orElseThrow(() -> new RuntimeException("User not found with provided email or phone number."));
-        }
+       // Extract the endpoint path
+       String requestURI = httpRequest.getRequestURI();
 
-        String email = user.getEmail();
-        String phoneNum = user.getPhoneNum();
+       // Dynamically determine request type
+       boolean isLoginAnotherWay = requestURI.contains("/auth/login-another-way");
 
-        // Generate OTP
-        String otp = otpUtil.generateOtp(emailOrPhone);
-        String message = "You have requested an OTP. Use the OTP below to proceed: " + otp;
-        String subjectMessage = "Your OTP Code";
+       // Fetch User
+       if (isSignUp) {
+           user = UserObjectUtil.getUser(emailOrPhone);
+       } else {
+           user = userService.findByUserName(emailOrPhone)
+                   .orElseThrow(() -> new RuntimeException("User not found."));
+       }
 
-        if (isLoginAnotherWay) {
-            // Login Another Way → Send OTP ONLY to the provided Email or Phone
-            if (emailOrPhone.contains("@")) {
-                emailSent = sendOtpByEmail(email, subjectMessage, message);
-                System.out.println("OTP sent on EMAIL : " + otp);
+       String email = user.getEmail();
+       String phoneNum = user.getPhoneNum();
+       String otp = otpUtil.generateOtp(emailOrPhone);
+       String message = "Your OTP: " + otp;
+       String subject = "OTP Code";
 
-            } else {
-                smsSent = sendOtpBySms(phoneNum, message);
-                System.out.println("OTP sent on SMS : " + otp);
-            }
-        } else {
-            // Normal Login, Forgot Password & Sign-Up → Send OTP to BOTH Email & SMS
-            emailSent = sendOtpByEmail(email, subjectMessage, message);
-            smsSent = sendOtpBySms(phoneNum, message);
-            System.out.println("OTP sent BOTH: " + otp);
-        }
+       //  Apply different OTP sending logic based on the detected request type
+       if (isLoginAnotherWay) {
+           if (emailOrPhone.contains("@")) {
+               emailSent = sendOtpByEmail(email, subject, message);
+               System.out.println("OTP sent on Email: "+otp);
+           } else {
+               smsSent = sendOtpBySms(phoneNum, message);
+               System.out.println("OTP sent on SMS: "+otp);
+           }
+       } else {
+           emailSent = sendOtpByEmail(email, subject, message);
+           smsSent = sendOtpBySms(phoneNum, message);
+           System.out.println("OTP sent on Both: "+otp);
+       }
 
-        return generateOtpResponse(emailSent, smsSent);
-    }
+       return generateOtpResponse(emailSent, smsSent);
+   }
 
     private boolean sendOtpByEmail(String email, String subject, String message) {
         if (email == null) return false;
@@ -77,16 +84,30 @@ public class SendOtpService {
         }
     }
 
-    private boolean sendOtpBySms(String phoneNum, String message) {
-        if (phoneNum == null) return false;
-        try {
+//    private boolean sendOtpBySms(String phoneNum, String message) {
+//        if (phoneNum == null) return false;
+//        try {
+//            smsService.sendSms(phoneNum, message);
+//            return true;
+//        } catch (Exception e) {
+//            System.err.println("LoginService: Failed to send SMS: " + e.getMessage());
+//            return false;
+//        }
+//    }
+
+private boolean sendOtpBySms(String phoneNum, String message) {
+    try {
+        if (phoneNum != null && !phoneNum.isBlank()) {
             smsService.sendSms(phoneNum, message);
-            return true;
-        } catch (Exception e) {
-            System.err.println("LoginService: Failed to send SMS: " + e.getMessage());
-            return false;
+            return true;  // ✅ SMS sent successfully
         }
+    } catch (Exception e) {
+        System.out.println("LoginService: Failed to send SMS: " + e.getMessage());
+        return false;  // ❌ SMS sending failed
     }
+    return false;
+}
+
 
     private Map<String, String> generateOtpResponse(boolean emailSent, boolean smsSent) {
         if (!emailSent && !smsSent) {
