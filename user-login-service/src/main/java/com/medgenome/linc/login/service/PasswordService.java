@@ -3,6 +3,7 @@ package com.medgenome.linc.login.service;
 import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.ResetPasswordRequest;
 import com.medgenome.linc.login.model.User;
+import com.medgenome.linc.login.validator.UserValidator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,13 @@ public class PasswordService {
     private final UserService userService;
     private final OtpUtil otpUtil;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
-    public PasswordService(UserService userService, OtpUtil otpUtil, PasswordEncoder passwordEncoder) {
+    public PasswordService(UserService userService, OtpUtil otpUtil, PasswordEncoder passwordEncoder, UserValidator userValidator) {
         this.userService = userService;
         this.otpUtil = otpUtil;
         this.passwordEncoder = passwordEncoder;
+        this.userValidator = userValidator;
     }
 
     public Map<String, String> handlePasswordReset(ResetPasswordRequest request) {
@@ -39,11 +42,7 @@ public class PasswordService {
             throw new RuntimeException("New password and confirm password do not match.");
         }
 
-        Optional<User> userOpt = userService.findByUserName(request.getEmailOrPhone());
-
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found with provided OTP.");
-        }
+        Optional<User> userOpt = Optional.ofNullable(userValidator.validateUserExists(request.getEmailOrPhone()));
 
         User user = userOpt.get();
         String emailOrPhone = user.getEmail() != null ? user.getEmail() : user.getPhoneNum();

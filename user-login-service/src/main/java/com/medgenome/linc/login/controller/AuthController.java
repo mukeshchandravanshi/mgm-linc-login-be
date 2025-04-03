@@ -2,14 +2,13 @@ package com.medgenome.linc.login.controller;
 
 import com.medgenome.linc.login.model.*;
 import com.medgenome.linc.login.service.*;
-import com.medgenome.linc.login.validator.ExistingUserValidator;
+import com.medgenome.linc.login.validator.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/auth")
@@ -21,19 +20,19 @@ public class AuthController {
     private final SendOtpService sendOtpService;
     private final UserService userService;
     private final PasswordService passwordService;
-    private final ExistingUserValidator existingUserValidator;
+    private final UserValidator userValidator;
 
 
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
-    public AuthController(SignUpService signUpService, AuthService authService, SendOtpService sendOtpService, UserService userService, PasswordService passwordService, ExistingUserValidator existingUserValidator) {
+    public AuthController(SignUpService signUpService, AuthService authService, SendOtpService sendOtpService, UserService userService, PasswordService passwordService, UserValidator userValidator) {
         this.signUpService = signUpService;
         this.authService = authService;
         this.sendOtpService = sendOtpService;
         this.userService = userService;
         this.passwordService = passwordService;
-        this.existingUserValidator = existingUserValidator;
+        this.userValidator = userValidator;
     }
 
     @PostMapping("/sign-up")
@@ -44,17 +43,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
-        existingUserValidator.validateUserExists(request.getEmailOrPhone());
+        userValidator.validateUserExists(request.getEmailOrPhone());
+        userValidator.validatePassword(request.getPassword());
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
-        sendOtpRequest.setPassword(request.getPassword());
         Map<String, String> otpResponse = sendOtpService.sendOtp(sendOtpRequest);
         return ResponseEntity.ok(otpResponse);
     }
 
     @PostMapping("/login-another-way")
     public ResponseEntity<Map<String, String>> loginAnotherWay(@RequestBody LoginAnotherWayRequest request) {
-        existingUserValidator.validateUserExists(request.getEmailOrPhone());
+        userValidator.validateUserExists(request.getEmailOrPhone());
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(sendOtpRequest);
@@ -72,7 +71,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        existingUserValidator.validateUserExists(request.getEmailOrPhone());
+        userValidator.validateUserExists(request.getEmailOrPhone());
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(sendOtpRequest);
@@ -81,7 +80,7 @@ public class AuthController {
 
     @PostMapping("/resend-otp")
     public ResponseEntity<Map<String, String>> resendOtp(@RequestBody SendOtpRequest request) {
-        existingUserValidator.validateUserExists(request.getEmailOrPhone());
+        userValidator.validateUserExists(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(request);
         return ResponseEntity.ok(response);
     }

@@ -4,14 +4,13 @@ import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.SendOtpRequest;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.util.UserObjectUtil;
-import com.medgenome.linc.login.validator.ExistingUserValidator;
+import com.medgenome.linc.login.validator.UserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,14 +22,13 @@ public class SendOtpService {
     private final OtpUtil otpUtil;
     private final EmailService emailService;
     private final SmsService smsService;
-    private final ExistingUserValidator existingUserValidator;
+    private final UserValidator userValidator;
 
     public Map<String, String> sendOtp(SendOtpRequest request) {
         String emailOrPhone = request.getEmailOrPhone();
         User user;
         boolean emailSent = false;
         boolean smsSent = false;
-
         boolean isSignUp = isSignUp(request);
         boolean isLoginAnotherWay = isLoginAnotherWay();
         // Fetch User
