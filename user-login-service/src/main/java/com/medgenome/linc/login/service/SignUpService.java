@@ -16,7 +16,7 @@ public class SignUpService {
     private final PasswordEncoder passwordEncoder;
     private final SendOtpService sendOtpService;
 
-    public SignUpService(UserService userService,PasswordEncoder passwordEncoder, SendOtpService sendOtpService) {
+    public SignUpService(UserService userService, PasswordEncoder passwordEncoder, SendOtpService sendOtpService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.sendOtpService = sendOtpService;
@@ -25,7 +25,7 @@ public class SignUpService {
     public void registerUser(User request) {
         // Validate Input
         InputValidator.validate(request);
-        String emailOrPhone = request.getEmail()!=null?request.getEmail():request.getPhoneNum();
+        String emailOrPhone = request.getEmail() != null ? request.getEmail() : request.getPhoneNum();
 
         // Check User Existence
         if (userService.findByUserName(emailOrPhone).isPresent()) {
@@ -47,8 +47,6 @@ public class SignUpService {
         // Save User Temporarily
         UserObjectUtil.saveUser(emailOrPhone, user);
         System.out.println("Temp user: " + UserObjectUtil.getUser(emailOrPhone));
-        // Send OTP
-        // userOtpService.handleOtpSending(user);
         // Now, send OTP to the user
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(emailOrPhone);

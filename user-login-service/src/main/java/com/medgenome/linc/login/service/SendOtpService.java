@@ -4,6 +4,7 @@ import com.medgenome.linc.login.config.OtpUtil;
 import com.medgenome.linc.login.model.SendOtpRequest;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.util.UserObjectUtil;
+import com.medgenome.linc.login.validator.ExistingUserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,56 +23,46 @@ public class SendOtpService {
     private final OtpUtil otpUtil;
     private final EmailService emailService;
     private final SmsService smsService;
-    
-   public Map<String, String> sendOtp(SendOtpRequest request) {
-       String emailOrPhone = request.getEmailOrPhone();
-       User user;
-       boolean emailSent = false;
-       boolean smsSent = false;
+    private final ExistingUserValidator existingUserValidator;
 
-       boolean isSignUp = UserObjectUtil.getUser(emailOrPhone) != null;
+    public Map<String, String> sendOtp(SendOtpRequest request) {
+        String emailOrPhone = request.getEmailOrPhone();
+        User user;
+        boolean emailSent = false;
+        boolean smsSent = false;
 
-       // 🔍 Get the current HTTP request
-       HttpServletRequest httpRequest =
-               ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        boolean isSignUp = isSignUp(request);
+        boolean isLoginAnotherWay = isLoginAnotherWay();
+        // Fetch User
+        if (isSignUp) {
+            user = UserObjectUtil.getUser(emailOrPhone);
+        } else {
+            user = userService.findByUserName(emailOrPhone).orElseThrow(() -> new RuntimeException("User not found"));
+        }
 
-       // Extract the endpoint path
-       String requestURI = httpRequest.getRequestURI();
+        String email = user.getEmail();
+        String phoneNum = user.getPhoneNum();
+        String otp = otpUtil.generateOtp(emailOrPhone);
+        String message = "Your OTP: " + otp;
+        String subject = "OTP Code";
 
-       // Dynamically determine request type
-       boolean isLoginAnotherWay = requestURI.contains("/auth/login-another-way");
+        //  Apply different OTP sending logic based on the detected request type
+        if (isLoginAnotherWay) {
+            if (emailOrPhone.contains("@")) {
+                emailSent = sendOtpByEmail(email, subject, message);
+                System.out.println("OTP sent on Email: " + otp);
+            } else {
+                smsSent = sendOtpBySms(phoneNum, message);
+                System.out.println("OTP sent on SMS: " + otp);
+            }
+        } else {
+            emailSent = sendOtpByEmail(email, subject, message);
+            smsSent = sendOtpBySms(phoneNum, message);
+            System.out.println("OTP sent on Both: " + otp);
+        }
 
-       // Fetch User
-       if (isSignUp) {
-           user = UserObjectUtil.getUser(emailOrPhone);
-       } else {
-           user = userService.findByUserName(emailOrPhone)
-                   .orElseThrow(() -> new RuntimeException("User not found."));
-       }
-
-       String email = user.getEmail();
-       String phoneNum = user.getPhoneNum();
-       String otp = otpUtil.generateOtp(emailOrPhone);
-       String message = "Your OTP: " + otp;
-       String subject = "OTP Code";
-
-       //  Apply different OTP sending logic based on the detected request type
-       if (isLoginAnotherWay) {
-           if (emailOrPhone.contains("@")) {
-               emailSent = sendOtpByEmail(email, subject, message);
-               System.out.println("OTP sent on Email: "+otp);
-           } else {
-               smsSent = sendOtpBySms(phoneNum, message);
-               System.out.println("OTP sent on SMS: "+otp);
-           }
-       } else {
-           emailSent = sendOtpByEmail(email, subject, message);
-           smsSent = sendOtpBySms(phoneNum, message);
-           System.out.println("OTP sent on Both: "+otp);
-       }
-
-       return generateOtpResponse(emailSent, smsSent);
-   }
+        return generateOtpResponse(emailSent, smsSent);
+    }
 
     private boolean sendOtpByEmail(String email, String subject, String message) {
         if (email == null || email.isBlank()) {

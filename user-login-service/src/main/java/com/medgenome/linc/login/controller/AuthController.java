@@ -16,7 +16,7 @@ import java.util.Optional;
 @Slf4j
 public class AuthController {
 
-    private  final SignUpService signUpService;
+    private final SignUpService signUpService;
     private final AuthService authService;
     private final SendOtpService sendOtpService;
     private final UserService userService;
@@ -27,9 +27,7 @@ public class AuthController {
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
-    public AuthController(SignUpService signUpService, AuthService authService,
-                          SendOtpService sendOtpService, UserService userService,
-                          PasswordService passwordService, ExistingUserValidator existingUserValidator) {
+    public AuthController(SignUpService signUpService, AuthService authService, SendOtpService sendOtpService, UserService userService, PasswordService passwordService, ExistingUserValidator existingUserValidator) {
         this.signUpService = signUpService;
         this.authService = authService;
         this.sendOtpService = sendOtpService;
@@ -57,7 +55,7 @@ public class AuthController {
 
     @PostMapping("/login-another-way")
     public ResponseEntity<Map<String, String>> loginAnotherWay(@RequestBody LoginAnotherWayRequest request) {
-        // Create a SendOtpRequest based on the incoming LoginRequest
+        existingUserValidator.validateUserExists(request.getEmailOrPhone());
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(sendOtpRequest);
@@ -67,16 +65,14 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public ResponseEntity<Map<String, String>> verifyOtp(@RequestBody OtpVerificationRequest request) {
         String emailOrPhone = request.getEmailOrPhone();
-        System.out.println("verify-otp-emailOrPhone"+emailOrPhone);
+        System.out.println("verify-otp-emailOrPhone" + emailOrPhone);
         String otp = request.getOtp();
-
         Map<String, String> response = authService.verifyOtp(emailOrPhone, otp);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        // Create a SendOtpRequest based on the incoming LoginRequest
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(sendOtpRequest);
@@ -85,13 +81,6 @@ public class AuthController {
 
     @PostMapping("/resend-otp")
     public ResponseEntity<Map<String, String>> resendOtp(@RequestBody SendOtpRequest request) {
-        String emailOrPhone = request.getEmailOrPhone();
-
-        // Find user safely
-        User user = userService.findByUserName(emailOrPhone)
-                .orElseThrow(() -> new RuntimeException("User not found with provided email or phone number."));
-
-        // Call the reusable OTP method
         Map<String, String> response = sendOtpService.sendOtp(request);
         return ResponseEntity.ok(response);
     }
