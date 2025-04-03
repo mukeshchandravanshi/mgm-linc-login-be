@@ -45,7 +45,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
         existingUserValidator.validateUserExists(request.getEmailOrPhone());
-        // Create a SendOtpRequest based on the incoming LoginRequest
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         sendOtpRequest.setPassword(request.getPassword());
@@ -73,6 +72,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        existingUserValidator.validateUserExists(request.getEmailOrPhone());
         SendOtpRequest sendOtpRequest = new SendOtpRequest();
         sendOtpRequest.setEmailOrPhone(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(sendOtpRequest);
@@ -81,6 +81,7 @@ public class AuthController {
 
     @PostMapping("/resend-otp")
     public ResponseEntity<Map<String, String>> resendOtp(@RequestBody SendOtpRequest request) {
+        existingUserValidator.validateUserExists(request.getEmailOrPhone());
         Map<String, String> response = sendOtpService.sendOtp(request);
         return ResponseEntity.ok(response);
     }
