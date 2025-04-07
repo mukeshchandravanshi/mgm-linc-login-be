@@ -15,6 +15,7 @@ public class JwtUtil {
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final long EXPIRATION_TIME = 600000; // 10 minutes
     private final long OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 Minutes for OTP
+    private final long REFRESH_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 24 HRS
 
     //Generate JWT token
     public String generateToken(String userName) {
@@ -50,7 +51,7 @@ public class JwtUtil {
     public String generateRefreshToken(String userName) {
         return Jwts.builder()
                 .setSubject(userName)
-                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 24 hours
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME)) // 24 hours
                 .signWith(secretKey)
                 .compact();
     }

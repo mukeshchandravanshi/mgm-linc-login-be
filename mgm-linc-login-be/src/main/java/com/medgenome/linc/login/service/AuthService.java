@@ -8,6 +8,7 @@ import com.medgenome.linc.login.model.TokenResponse;
 import com.medgenome.linc.login.model.User;
 import com.medgenome.linc.login.util.UserObjectUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,32 +70,36 @@ public class AuthService {
     public ResponseEntity<TokenResponse> refreshToken(TokenRequest tokenRequest) {
         String refreshToken = tokenRequest.getRefreshToken();
         try {
-            String username = jwtUtil.extractUsername(refreshToken);
-
-            // Validate Refresh Token without checking expiration
+            // Validate first
             if (!jwtUtil.validateTokenWithoutExpiration(refreshToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new TokenResponse(null, null, "Invalid refresh token."));
             }
 
-            // Check if the user exists
+            // Extract username safely after validation
+            String username = jwtUtil.extractUsername(refreshToken);
+
             Optional<User> userOpt = userService.findByUserName(username);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new TokenResponse(null, null, "User not found."));
             }
 
-            // Generate new tokens
             String accessToken = jwtUtil.generateToken(username);
             String newRefreshToken = jwtUtil.generateRefreshToken(username);
 
             return ResponseEntity.ok(new TokenResponse(accessToken, newRefreshToken, "Token refreshed successfully."));
+
         } catch (ExpiredJwtException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new TokenResponse(null, null, "Refresh token expired. Please log in again."));
+        } catch (MalformedJwtException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new TokenResponse(null, null, "Invalid refresh token format."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new TokenResponse(null, null, "An error occurred while refreshing the token."));
         }
+
     }
 }
