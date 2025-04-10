@@ -7,14 +7,14 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
-//@SpringBootTest
-//class UserLoginServiceApplicationTests {
-//
-//	@Test
-//	void contextLoads() {
-//	}
-//
-//}
+    @SpringBootTest
+class UserLoginServiceApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
 
 
 
